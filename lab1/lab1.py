@@ -1,4 +1,4 @@
-# Программа преобразования csv файла списка группы
+# Программа преобразования CSV файла списка группы
 # ИТМО в XML файл с разделением студентов по полу
 #
 # Автор - Штрейс Никита, гр.P3320
@@ -9,7 +9,6 @@ from lxml import etree
 
 # Функция разбивки имени на составляющие части
 def get_name(fullname):
-
     name_parts = fullname.split()
 
     surname = name_parts[0]
@@ -37,6 +36,7 @@ for row in reader:
 
         # Создание корня XML файла
         root = etree.Element("group", number=group_number)
+        # Создание мужской и женской подгрупп
         male_group = etree.SubElement(root, "subgroup", gender='male')
         female_group = etree.SubElement(root, "subgroup", gender='female')
         continue
@@ -61,7 +61,6 @@ for row in reader:
 
 # Запись в файл
 f = open('../../' + group_number + '.xml', 'w')
+f.write('<?xml version="1.0" encoding="windows-1251"?>\n')
 f.write(etree.tostring(root, pretty_print=True, encoding="utf-8").decode('utf-8'))
 f.close()
-
-print(etree.tostring(root, pretty_print=True, encoding="utf-8").decode('utf-8'))
