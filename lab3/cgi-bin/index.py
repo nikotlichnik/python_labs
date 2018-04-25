@@ -8,50 +8,57 @@ def connect_db():
     return con
 
 
-# Получение списка таблиц в БД
-def get_tables_list(con):
+# Получение списка научных групп из БД
+def get_science_groups(con):
     cur = con.cursor()
-    cur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name ASC")
+    cur.execute(
+        "SELECT sg.`name`, t.`surname`, t.`name`, t.`middlename`, sg.`id` FROM Scientific_groups sg, Teachers t WHERE sg.head = t.id ORDER BY sg.`name` ASC")
     query_list = cur.fetchall()
 
     # Распаковка массива кортежей в обычный массив
-    tables_list = []
-    for table in query_list:
-        tables_list.append(table[0])
-
-    # Удаление служебной таблицы
-    tables_list.remove("sqlite_sequence")
+    groups_list = []
+    for science_group in query_list:
+        groups_list.append(science_group)
 
     cur.close()
-    return tables_list
+    return groups_list
 
 
-# Получение списка элементов option для формы
-def get_option_list(list_of_elements):
-    options = ""
-    for element in list_of_elements:
-        options += "<option value='" + element + "'>" + element + "</option>"
-    return options
+# Формирование таблицы из списка научных групп
+def make_science_groups_table(groups_list):
+    table = """<table border=1>
+                    <tr>
+                        <th>№ п/п</th>
+                        <th>Название научной группы</th>
+                        <th>Руководитель</th>
+                    </tr>
+            """
+
+    for key, science_group in enumerate(groups_list, 1):
+        group_name = science_group[0]
+        head_name = science_group[1] + " " + science_group[2][0].upper() + "." + science_group[3][0].upper() + "."
+        group_id = science_group[4]
+        table += """<tr>
+                        <td>{0}</td>
+                        <td><a href='show_science_group.py?id={3}'>{1}</a></td>
+                        <td>{2}</td>
+                    </tr>""".format(key, group_name, head_name, group_id)
+
+    table += "</table>"
+    return table
 
 
 conn = connect_db()
-list_of_tables = get_tables_list(conn)
-table_options = get_option_list(list_of_tables)
+list_of_science_groups = get_science_groups(conn)
 
 print("Content-type: text/html")
 print("\n")
 print("<meta charset='utf-8'><h1>Лабораторная №3 CGI</h1>")
 
-print("<h2>Запись в таблицу</h2>")
-print("""<form action='write_to_db.py' method='post'>
-            <select name='table'>{0}</select> 
-            <button type='submit' name='db_write'>Выбрать</button>   
-         </form>""".format(table_options))
+print("<h2>Действия</h2>")
+print("""<a href='add_science_group.py'>Добавить научную группу</a>""")
 
-print("<h2>Просмотр таблицы</h2>")
-print("""<form action='show_from_db.py' method='post'>
-            <select name='table'>{0}</select> 
-            <button type='submit' name='db_show'>Выбрать</button>   
-         </form>""".format(table_options))
+print("<h2>Список научных групп</h2>")
+print(make_science_groups_table(list_of_science_groups))
 
 print("<p>Автор: Штрейс Никита, гр.P3320</p>")
